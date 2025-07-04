@@ -7,7 +7,7 @@ use Exporter "import";
 
 sub fastq_align {
 
-getopts("O:1:2:t:o:R:r:XM:", \%opt);
+getopts("O:1:2:t:o:R:r:XYM:", \%opt);
 
 $threads = 1;
 $o_threads = 1;
@@ -46,6 +46,8 @@ $ref_shortcuts
               Requires 'slack' as cli callable
 -X           Retain coord sorted bam (def is only name sorted)
 
+-Y           Resume after coord sorted bam is generated (will check if bam exists)
+
 Executable Commands (from $DEFAULTS_FILE)
    bsbolt:   $bsbolt
    slack:    $slack
@@ -78,11 +80,21 @@ if (defined $opt{'2'}) {
 	$align_call = "$bsbolt Align -F1 $opt{'1'} -t $threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
 }
 
-print LOG "Command: $align_call\n";
-system("$align_call");
-
-$ts = localtime(time);
-print LOG "$ts\tDone.\n";
+if (!defined $opt{'Y'}) {
+	print LOG "Command: $align_call\n";
+	system("$align_call");
+	$ts = localtime(time);
+	print LOG "$ts\tDone.\n";
+} else {
+	print LOG "Skipped Command: $align_call\n";
+	# Check if the BAM file exists and is not empty
+	if (-s "$opt{'O'}.bam") {
+		print LOG "$opt{'O'}.bam exists! Resume sorting.\n";
+	} else {
+		print LOG "$opt{'O'}.bam does NOT exist! Create empty bam for stub run.\n";
+		system("touch $opt{'O'}.bam");
+	}
+}
 
 if (defined $opt{'r'}) {
 	$message = "Alignment complete for $opt{'O'}\nStart time: $start_time\nEnd time: $ts\nCall: $pe_align_call\n";
