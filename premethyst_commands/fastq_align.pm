@@ -7,7 +7,7 @@ use Exporter "import";
 
 sub fastq_align {
 
-getopts("O:1:2:t:o:R:r:XYM:", \%opt);
+getopts("O:1:2:t:o:R:XyYM:", \%opt);
 
 $threads = 1;
 $o_threads = 1;
@@ -42,15 +42,14 @@ $ref_shortcuts
                (also thread count for sorting by name)
 -M   [#G]    GB used per thread in sorting (def = $sort_mem)
 
--r   [STR]   Report alignment stats to slack channel
-              Requires 'slack' as cli callable
 -X           Retain coord sorted bam (def is only name sorted)
 
--Y           Resume after coord sorted bam is generated (will check if bam exists)
+-y           Perform alignment only and skip sorting by name
+
+-Y           Resume sorting by name after coord sorted bam is generated (will check if bam exists)
 
 Executable Commands (from $DEFAULTS_FILE)
    bsbolt:   $bsbolt
-   slack:    $slack
    samtools: $samtools
 	
 ";
@@ -70,9 +69,7 @@ if (defined $opt{'t'}) {$threads = $opt{'t'}};
 if (defined $opt{'o'}) {$o_threads = $opt{'o'}};
 if (defined $opt{'M'}) {$sort_mem = $opt{'M'}};
 
-open LOG, ">$opt{'O'}.bsbolt.log";
-$ts = localtime(time);
-print LOG "$ts\tAlignment called.\n";
+open LOG, ">>$opt{'O'}.bsbolt.log";
 
 if (defined $opt{'2'}) {
 	$align_call = "$bsbolt Align -F1 $opt{'2'} -F2 $opt{'1'} -t $threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
@@ -80,33 +77,38 @@ if (defined $opt{'2'}) {
 	$align_call = "$bsbolt Align -F1 $opt{'1'} -t $threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
 }
 
+
+print LOG "\n=== premethyst fastq-align ===\n";
+print LOG "Command: $align_call\n\n\n";
 if (!defined $opt{'Y'}) {
-	print LOG "Command: $align_call\n";
 	system("$align_call");
-	$ts = localtime(time);
-	print LOG "$ts\tDone.\n";
+	print LOG "\n\n\nAlignment done.\n";
 } else {
-	print LOG "Skipped Command: $align_call\n";
+	print LOG "Alignment skipped.\n";
 	# Check if the BAM file exists and is not empty
 	if (-s "$opt{'O'}.bam") {
-		print LOG "$opt{'O'}.bam exists! Resume sorting.\n";
+		print LOG "$opt{'O'}.bam exists! Resume sorting by name.\n";
 	} else {
 		print LOG "$opt{'O'}.bam does NOT exist! Create empty bam for stub run.\n";
 		system("touch $opt{'O'}.bam");
 	}
 }
 
-if (defined $opt{'r'}) {
-	$message = "Alignment complete for $opt{'O'}\nStart time: $start_time\nEnd time: $ts\nCall: $pe_align_call\n";
-	system("$slack -F $opt{'O'}.align_report.txt -c \"$message\" $opt{'r'} >/dev/null 2>/dev/null");
-}
-
 $ts = localtime(time);
-print LOG "$ts\tSorting by read name.\n";
+print LOG "Alignment complete for $opt{'O'}\nStart time: $start_time\nEnd time: $ts\n\n";
 
-$sort_call = "$samtools sort -@ $o_threads -n -m $sort_mem $opt{'O'}.bam > $opt{'O'}.nsrt.bam";
-print LOG "Command: $sort_call\n";
-system("$sort_call");
+if (defined $opt{'y'}) {
+	print LOG "Skip sorting by read name. Exit.\n";
+} else {
+	print LOG "Sorting by read name.\n";
+	
+	$sort_call = "$samtools sort -@ $o_threads -n -m $sort_mem $opt{'O'}.bam > $opt{'O'}.nsrt.bam";
+	print LOG "Command: $sort_call\n";
+	system("$sort_call");
+
+	$te = localtime(time);
+	print LOG "Sorting complete for $opt{'O'}\nStart time: $ts\nEnd time: $te\n\n";
+}
 
 if (!defined $opt{'X'}) {
 	print LOG "Deleting $opt{'O'}.bam\n";
