@@ -7,9 +7,9 @@ use Exporter "import";
 
 sub fastq_align {
 
-getopts("O:1:2:t:o:R:r:XM:", \%opt);
+getopts("O:1:2:t:o:R:XyYM:", \%opt);
 
-$threads = 1;
+$a_threads = 1;
 $o_threads = 1;
 $sort_mem = "4G";
 
@@ -42,64 +42,99 @@ $ref_shortcuts
                (also thread count for sorting by name)
 -M   [#G]    GB used per thread in sorting (def = $sort_mem)
 
--r   [STR]   Report alignment stats to slack channel
-              Requires 'slack' as cli callable
 -X           Retain coord sorted bam (def is only name sorted)
+
+-y           Perform alignment only and skip sorting by name
+
+-Y           Skip alignment and resume sorting by name (will check if coord sorted bam exists)
 
 Executable Commands (from $DEFAULTS_FILE)
    bsbolt:   $bsbolt
-   slack:    $slack
    samtools: $samtools
 	
 ";
 
-$start_time = localtime(time);
-
-if (!defined $opt{'R'}) {
-	die "\nERROR: Provide a reference as -R\n$die";
-} else {
-	if (defined $REF{$opt{'R'}}) {$ref = $REF{$opt{'R'}}}
-	else {$ref = $opt{'R'}};
+# Check if both flags are on
+if ( defined $opt{'Y'} && defined $opt{'y'} ) {
+    die "\nERROR: Should not turn on -Y and -y at the same time!\n";
 }
 
-if (!defined $opt{'1'}) {die "\nERROR: Read 1 MUST be specified!\n$die"};
+
 if (!defined $opt{'O'}) {die "\nERROR: Specify output as -O\n$die"};
-if (defined $opt{'t'}) {$threads = $opt{'t'}};
-if (defined $opt{'o'}) {$o_threads = $opt{'o'}};
-if (defined $opt{'M'}) {$sort_mem = $opt{'M'}};
+if (defined $opt{'o'}) {$o_threads = $opt{'o'}}; # Apply to both aln and srt
 
-open LOG, ">$opt{'O'}.bsbolt.log";
-$ts = localtime(time);
-print LOG "$ts\tAlignment called.\n";
+if (defined $opt{'Y'}) { # Skip alignment and resume sorting by name
+	# Check if the BAM file exists and is not empty
+	if (! -f "$opt{'O'}.bam") {
+		die "$opt{'O'}.bam does note exist!\n";
+	}
+} else { # Will perform alignment 
+	if (!defined $opt{'R'}) {
+		die "\nERROR: Provide a reference as -R\n$die";
+	} else {
+		if (defined $REF{$opt{'R'}}) {$ref = $REF{$opt{'R'}}}
+		else {$ref = $opt{'R'}};
+	}
+	if (!defined $opt{'1'}) {die "\nERROR: Read 1 MUST be specified!\n$die"};
+	if (defined $opt{'t'}) {$a_threads = $opt{'t'}}; # Only apply to bsbolt alignment
 
-if (defined $opt{'2'}) {
-	$align_call = "$bsbolt Align -F1 $opt{'2'} -F2 $opt{'1'} -t $threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
-} else {
-	$align_call = "$bsbolt Align -F1 $opt{'1'} -t $threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
+	# Construct cmd
+	if (defined $opt{'2'}) {
+		$align_call = "$bsbolt Align -F1 $opt{'2'} -F2 $opt{'1'} -t $a_threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
+	} else {
+		$align_call = "$bsbolt Align -F1 $opt{'1'} -t $a_threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
+	}
 }
 
-print LOG "Command: $align_call\n";
-system("$align_call");
+if (defined $opt{'y'}) { # Perform alignment only and skip sorting by name
+} else { # Will perform sorting 
+	if (defined $opt{'M'}) {$sort_mem = $opt{'M'}}; # Only apply to sorting
 
-$ts = localtime(time);
-print LOG "$ts\tDone.\n";
-
-if (defined $opt{'r'}) {
-	$message = "Alignment complete for $opt{'O'}\nStart time: $start_time\nEnd time: $ts\nCall: $pe_align_call\n";
-	system("$slack -F $opt{'O'}.align_report.txt -c \"$message\" $opt{'r'} >/dev/null 2>/dev/null");
+	# Construct cmd
+	$sort_call = "$samtools sort -@ $o_threads -n -m $sort_mem $opt{'O'}.bam > $opt{'O'}.nsrt.bam";
 }
 
-$ts = localtime(time);
-print LOG "$ts\tSorting by read name.\n";
 
-$sort_call = "$samtools sort -@ $o_threads -n -m $sort_mem $opt{'O'}.bam > $opt{'O'}.nsrt.bam";
-print LOG "Command: $sort_call\n";
-system("$sort_call");
 
-if (!defined $opt{'X'}) {
-	print LOG "Deleting $opt{'O'}.bam\n";
-	system("rm -f $opt{'O'}.bam");
+open LOG, ">>$opt{'O'}.bsbolt.log";
+
+print LOG "\n=== premethyst fastq-align ===\n";
+
+
+if (defined $opt{'Y'}) { # Skip alignment and resume sorting by name
+	print LOG "Alignment skipped.\n";
+} else { # Will perform alignment 
+	
+	print LOG "Command: $align_call\n\n\n";
+
+	$ts = localtime(time);
+	system("$align_call");
+	$te = localtime(time);
+
+	print LOG "\n\n\nAlignment done.\n";
+	print LOG "Alignment complete for $opt{'O'}\nStart time: $ts\nEnd time: $te\n\n";
+
 }
+
+if (defined $opt{'y'}) { # Perform alignment only and skip sorting by name
+	print LOG "Skip sorting by read name. Exit.\n";
+} else { # Will perform sorting 
+	print LOG "Command: $sort_call\n";
+	$ts = localtime(time);
+	system("$sort_call");
+	$te = localtime(time);
+
+	print LOG "Sorting complete for $opt{'O'}\nStart time: $ts\nEnd time: $te\n\n";
+
+	# Can only delete coord sorted bam when name sorting is performed
+	if (!defined $opt{'X'}) {
+		print LOG "Deleting $opt{'O'}.bam\n";
+		system("rm -f $opt{'O'}.bam");
+	}
+
+}
+
+close LOG;
 
 exit;
 
