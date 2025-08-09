@@ -80,7 +80,7 @@ if (defined $opt{'Y'}) { # Skip alignment and resume sorting by name
 
 	# Construct cmd
 	if (defined $opt{'2'}) {
-		$align_call = "$bsbolt Align -F1 $opt{'2'} -F2 $opt{'1'} -t $a_threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
+		$align_call = "$bsbolt Align -F1 $opt{'1'} -F2 $opt{'2'} -t $a_threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
 	} else {
 		$align_call = "$bsbolt Align -F1 $opt{'1'} -t $a_threads -OT $o_threads -O $opt{'O'} -DB $ref >> $opt{'O'}.bsbolt.log 2>> $opt{'O'}.bsbolt.log";
 	}
