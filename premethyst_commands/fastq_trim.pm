@@ -69,17 +69,19 @@ if (defined $opt{'U'} && (defined $opt{'1'} || defined $opt{'2'})) {
 if (!defined $opt{'U'}) { # Illumina mode, paired reads
 	if (!defined $opt{'1'} || !defined $opt{'2'}) {die "\nERROR: Reads 1 and 2 must be specified.\n$die"};
 
+	$a_opts = (defined $opt{'a'} && defined $opt{'b'}) ? "-a $a1 -a2 $a2" : "";
+
 	if (defined $opt{'u'}) {
 		if ($r2_trim > 0) {
-			$trim_command = "$trim_galore -a $a1 -a2 $a2 --three_prime_clip_R2 $r2_trim -j $threads --paired --retain_unpaired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
+			$trim_command = "$trim_galore $a_opts --three_prime_clip_R2 $r2_trim -j $threads --paired --retain_unpaired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
 		} else {
-			$trim_command = "$trim_galore -a $a1 -a2 $a2 -j $threads --paired --retain_unpaired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
+			$trim_command = "$trim_galore $a_opts -j $threads --paired --retain_unpaired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
 		}
 	} else {
 		if ($r2_trim > 0) {
-			$trim_command = "$trim_galore -a $a1 -a2 $a2 --three_prime_clip_R2 $r2_trim -j $threads --paired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
+			$trim_command = "$trim_galore $a_opts --three_prime_clip_R2 $r2_trim -j $threads --paired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
 		} else {
-			$trim_command = "$trim_galore -a $a1 -a2 $a2 -j $threads --paired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
+			$trim_command = "$trim_galore $a_opts -j $threads --paired $opt{'1'} $opt{'2'} >> $opt{'O'}.trim.log 2>> $opt{'O'}.trim.log";
 		}
 	}
 } else { # Ultima Mode, single-end
