@@ -49,9 +49,9 @@ if (defined $opt{'t'}) {$threads = $opt{'t'}};
 if (defined $opt{'T'}) {$in_threads = $opt{'T'}};
 
 if (defined $opt{'N'}) {
-	open OUT, "| $samtools view -bSu - | $samtools sort -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q10.bam";
+	open OUT, "| $samtools view -bSu - | $samtools sort -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q${minq}.bam";
 } else {
-	open OUT, "| $samtools view -bSu - | $samtools sort -n -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q10.nsrt.bam";
+	open OUT, "| $samtools view -bSu - | $samtools sort -n -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q${minq}.nsrt.bam";
 }
 
 open HEAD, "$samtools view -H $ARGV[0] |";
