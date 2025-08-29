@@ -7,7 +7,7 @@ use Exporter "import";
 
 sub bam_rmdup {
 
-getopts("O:t:q:NT:m:", \%opt);
+getopts("O:t:q:NT:m:P:", \%opt);
 
 $sort_threads = 1;
 $in_threads = 1;
@@ -24,16 +24,16 @@ Performs barcode-aware duplicate read removal.
 Outputs a name-sorted bam.
 
 Options:
-   -O   [STR]   Output prefix (def = input bam prefix)
-   -T   [INT]   Threads for the bam file read-in. (def = $in_threads)
-   -q   [INT]   Min read alignment quality (def = $minq)
-   -t   [INT]   Threads for the sorting process. (def = $sort_threads)
-   -m   [#G]    GB used per thread in sorting (def = $sort_mem)
-   -N           Do NOT name sort (coord sort; def = nsrt)
+   -O   [STR]       Output prefix (def = input bam prefix)
+   -T   [INT]       Threads for the bam file read-in. (def = $in_threads)
+   -q   [INT]       Min read alignment quality (def = $minq)
+   -t   [INT]       Threads for the sorting process. (def = $sort_threads)
+   -m   [#G]        GB used per thread in sorting (def = $sort_mem)
+   -P   [PREFIX]    Write temporary files to PREFIX.nnnn.bam 
+   -N               Do NOT name sort (coord sort; def = nsrt)
 
 Executable Commands (from $DEFAULTS_FILE)
    samtools:   $samtools
-   slack:      $slack
    premethyst: $premethyst
 
 ";
@@ -53,7 +53,8 @@ if (defined $opt{'m'}) {$sort_mem = $opt{'m'}};
 
 my $sort_mode = defined $opt{'N'} ? "" : "-n";
 my $suffix    = defined $opt{'N'} ? "" : ".nsrt";
-open OUT, "| $samtools view -bSu - | $samtools sort $sort_mode -@ $sort_threads -T $opt{'O'}.TMP -m $sort_mem - > $opt{'O'}.bbrd.q${minq}${suffix}.bam";
+my $tmp       = defined $opt{'P'} ? "-T $opt{'P'}" : "";
+open OUT, "| $samtools view -bSu - | $samtools sort $sort_mode -@ $sort_threads -m $sort_mem $tmp - > $opt{'O'}.bbrd.q${minq}${suffix}.bam";
 
 open HEAD, "$samtools view -H $ARGV[0] |";
 while ($l = <HEAD>){print OUT "$l"};
