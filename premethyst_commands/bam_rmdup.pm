@@ -7,11 +7,12 @@ use Exporter "import";
 
 sub bam_rmdup {
 
-getopts("O:t:q:NT:", \%opt);
+getopts("O:t:q:NT:m:", \%opt);
 
-$threads = 1;
+$sort_threads = 1;
 $in_threads = 1;
 $minq = 10;
+$sort_mem = "4G";
 
 $die = "
 
@@ -24,9 +25,10 @@ Outputs a name-sorted bam.
 
 Options:
    -O   [STR]   Output prefix (def = input bam prefix)
-   -t   [INT]   Threads for the sorting process. (def = $threads)
    -T   [INT]   Threads for the bam file read-in. (def = $in_threads)
    -q   [INT]   Min read alignment quality (def = $minq)
+   -t   [INT]   Threads for the sorting process. (def = $sort_threads)
+   -m   [#G]    GB used per thread in sorting (def = $sort_mem)
    -N           Do NOT name sort (coord sort; def = nsrt)
 
 Executable Commands (from $DEFAULTS_FILE)
@@ -45,14 +47,13 @@ if (!defined $opt{'O'}) {
 }
 
 if (defined $opt{'q'}) {$minq = $opt{'q'}};
-if (defined $opt{'t'}) {$threads = $opt{'t'}};
+if (defined $opt{'t'}) {$sort_threads = $opt{'t'}};
 if (defined $opt{'T'}) {$in_threads = $opt{'T'}};
+if (defined $opt{'m'}) {$sort_mem = $opt{'m'}};
 
-if (defined $opt{'N'}) {
-	open OUT, "| $samtools view -bSu - | $samtools sort -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q${minq}.bam";
-} else {
-	open OUT, "| $samtools view -bSu - | $samtools sort -n -@ $threads -T $opt{'O'}.TMP -m 4G - > $opt{'O'}.bbrd.q${minq}.nsrt.bam";
-}
+my $sort_mode = defined $opt{'N'} ? "" : "-n";
+my $suffix    = defined $opt{'N'} ? "" : ".nsrt";
+open OUT, "| $samtools view -bSu - | $samtools sort $sort_mode -@ $sort_threads -T $opt{'O'}.TMP -m $sort_mem - > $opt{'O'}.bbrd.q${minq}${suffix}.bam";
 
 open HEAD, "$samtools view -H $ARGV[0] |";
 while ($l = <HEAD>){print OUT "$l"};
