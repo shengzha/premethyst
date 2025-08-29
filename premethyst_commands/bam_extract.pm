@@ -114,7 +114,7 @@ if (!defined $opt{'s'}) { # main thread
 	$thread_opts .= "-s";
 	
 	# open log file
-	open LOG, ">$opt{'O'}.log";
+	open LOG, ">$opt{'O'}.extract.log";
 	$ts = localtime(time);
 	print LOG "$ts\tProgram called.\n\n============== Phase 1: Parsing bam and processing per-cell calls ==============\n\n";
 
