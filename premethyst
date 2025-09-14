@@ -139,6 +139,7 @@ sub load_aliases {
 	foreach $alias ("trim", "fq_trim", "trim_fq", "trim_fastq") {$COMMAND_ALIAS{$alias} = "fastq_trim"};
 	foreach $alias ("aln", "align", "fq_align", "align_fq", "align_fastq") {$COMMAND_ALIAS{$alias} = "fastq_align"};
 	foreach $alias ("nsrt", "bam_nsrt", "nsrt_bam") {$COMMAND_ALIAS{$alias} = "bam_nsrt"};
+	foreach $alias ("bam_split", "split_bam") {$COMMAND_ALIAS{$alias} = "bam_split"};
 	foreach $alias ("check_defaults", "defaults_check") {$COMMAND_ALIAS{$alias} = "defaults"};
 	foreach $alias ("rmdup", "bam_rmdup", "rmdup_bam") {$COMMAND_ALIAS{$alias} = "bam_rmdup"};
 	foreach $alias ("complexity") {$COMMAND_ALIAS{$alias} = "plot_complexity"};
@@ -163,6 +164,7 @@ sub load_descriptions {
 	$COMMAND_DESCRIPTOR{"fastq_align"} = "Wrapper to align sciMET fastq files using BSBolt";
 	$COMMAND_DESCRIPTOR{"defaults"} = "List defaults being used from config file";
 	$COMMAND_DESCRIPTOR{"bam_nsrt"} = "Sorts bam by read name";
+	$COMMAND_DESCRIPTOR{"bam_split"} = "Split bam by barcode";
 	$COMMAND_DESCRIPTOR{"bam_rmdup"} = "Removes PCR duplicates from a nsrt bam file";
 	$COMMAND_DESCRIPTOR{"plot_complexity"} = "Plots complexity after rmdup";
 	$COMMAND_DESCRIPTOR{"bam_extract"} = "Extract methylaiton calls from a nsrt, rmdup, bsbolt bam file";
