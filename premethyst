@@ -140,6 +140,7 @@ sub load_aliases {
 	foreach $alias ("aln", "align", "fq_align", "align_fq", "align_fastq") {$COMMAND_ALIAS{$alias} = "fastq_align"};
 	foreach $alias ("nsrt", "bam_nsrt", "nsrt_bam") {$COMMAND_ALIAS{$alias} = "bam_nsrt"};
 	foreach $alias ("bam_split", "split_bam") {$COMMAND_ALIAS{$alias} = "bam_split"};
+	foreach $alias ("bss", "bam_bss") {$COMMAND_ALIAS{$alias} = "bam_bss"};
 	foreach $alias ("check_defaults", "defaults_check") {$COMMAND_ALIAS{$alias} = "defaults"};
 	foreach $alias ("rmdup", "bam_rmdup", "rmdup_bam") {$COMMAND_ALIAS{$alias} = "bam_rmdup"};
 	foreach $alias ("complexity") {$COMMAND_ALIAS{$alias} = "plot_complexity"};
