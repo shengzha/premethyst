@@ -147,6 +147,7 @@ sub load_aliases {
 	foreach $alias ("complexity") {$COMMAND_ALIAS{$alias} = "plot_complexity"};
 	foreach $alias ("extract", "extract_calls", "bam2calls", "extract_bam") {$COMMAND_ALIAS{$alias} = "bam_extract"};
 	foreach $alias ("calls_to_h5", "export", "calls_export", "export_h5") {$COMMAND_ALIAS{$alias} = "calls2h5"};
+	foreach $alias ("cgmaps2h5") {$COMMAND_ALIAS{$alias} = "cgmaps2h5"};
 	foreach $alias ("context", "extract_context") {$COMMAND_ALIAS{$alias} = "context_extract"};
 	foreach $alias ("genome_context", "context_fasta") {$COMMAND_ALIAS{$alias} = "fasta_context"};
 	foreach $alias ("rename", "rename_calls") {$COMMAND_ALIAS{$alias} = "calls_rename"};
@@ -173,6 +174,7 @@ sub load_descriptions {
 	$COMMAND_DESCRIPTOR{"plot_complexity"} = "Plots complexity after rmdup";
 	$COMMAND_DESCRIPTOR{"bam_extract"} = "Extract methylaiton calls from a nsrt, rmdup, bsbolt bam file";
 	$COMMAND_DESCRIPTOR{"calls2h5"} = "Packages cellcalls into an h5 file for amethyst processing";
+	$COMMAND_DESCRIPTOR{"cgmaps2h5"} = "Packages cellcalls (cgmaps) into an h5 file for amethyst (v2) processing";
 	$COMMAND_DESCRIPTOR{"context_extract"} = "Extract a specific context from cellCalls";
 	$COMMAND_DESCRIPTOR{"fasta_context"} = "Generate a bed of sites for a specific context in a fasta";
 	$COMMAND_DESCRIPTOR{"calls_rename"} = "Rename callFiles for future run merging";
