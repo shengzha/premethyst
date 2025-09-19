@@ -23,10 +23,12 @@ folder_path = args.input_folder
 hdf5_path = args.output_prefix + ".h5"
 
 # defaults from facet or premethyst
+dataset = 1
 compression = "gzip"
 compression_opts = 9 # 6 from facet
 amethyst_version = "amethyst2.0.0"
 overwrite = True
+
 
 def read_cgmap_gz(file_path):
     try:
@@ -63,13 +65,14 @@ with h5py.File(hdf5_path, mode) as f:
 
         file_path = os.path.join(folder_path, file_name)
         cell_id = file_name.replace('.CGmap.gz', '')
+        print(f"Reading {cell_id}...")
 
         context_data = read_cgmap_gz(file_path)
         if context_data is None: # empty
             continue
 
         for (context, data) in context_data:
-            target = f"/{''.join(context)}/{''.join(cell_id)}"
+            target = f"/{context}/{cell_id}/{dataset}"
             f.create_dataset(target, data=data, compression=compression, compression_opts=compression_opts)
 
 print("Files combined and written to HDF5.")
