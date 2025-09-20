@@ -8,20 +8,20 @@ use Exporter "import";
 
 sub bam_split {
 
-$in_threads = 1;
+$threads = 1;
 $n_buckets = 1;
 
 $die = "
 
 premethyst bam-split (options) -w [barcode whitelist] -o [output directory] [input bam]
-      or   split-bam
+      or   split
 
 Split name sorted bam by barcodes.
 
 Options    
 -w   [STR]      Barcode whitelist file, one barcode per line (required)
 -o   [DIR]      Output directory 
--T   [INT]      Threads for the bam file read-in. (def = $in_threads)
+-t   [INT]      Threads for the bam file read-in. (def = $threads)
 -b   [INT]      Distribute the bams to a number of buckets (when > 1) (def = $n_buckets)
 
 Executable Commands (from $DEFAULTS_FILE)
@@ -30,10 +30,7 @@ Executable Commands (from $DEFAULTS_FILE)
    
 ";
 
-# The Getopt::Std module in Perl, which provides the getopts() function, 
-# handles unknown options by issuing a warning and returning false. 
-# To abort the program upon detection of an unknown option, the return value of getopts() can be checked, and die() can be called if it is false.
-unless (getopts("w:o:T:b:", \%opt)) {
+unless (getopts("w:o:t:b:", \%opt)) {
 	die "Unknown option or missing argument.\n$die";
 }
 
@@ -41,7 +38,7 @@ unless (getopts("w:o:T:b:", \%opt)) {
 if (!defined $ARGV[0]) {die "\nERROR: Specify input as argument\n$die"};
 if (!defined $opt{'w'}) {die "\nERROR: Specify barcode whitelist as -w\n$die"};
 if (!defined $opt{'o'}) {$opt{'o'} = $ARGV[0]; $opt{'o'} =~ s/\.nsrt\.bam$/\.split/}; # parse from input bam
-if (defined $opt{'T'}) {$in_threads = $opt{'T'}};
+if (defined $opt{'t'}) {$threads = $opt{'t'}};
 if (defined $opt{'b'}) {$n_buckets = $opt{'b'}};
 
 #-------------------------
@@ -76,7 +73,7 @@ my $header = `$samtools view -H $in_bam`;
 #-------------------------
 # Read BAM line by line
 #-------------------------
-open(my $IN, "-|", "$samtools view -@ $in_threads $in_bam 2>/dev/null") or die "Can't read BAM: $!";
+open(my $IN, "-|", "$samtools view -@ $threads $in_bam 2>/dev/null") or die "Can't read BAM: $!";
 
 my $prev_cellID = '';
 my $cellID;
