@@ -92,32 +92,32 @@ while (my $line = <$IN>) {
 	# If switching to a new cell ID
 	if ($cellID ne $prev_cellID) {
 
-		# Skip if not in valid barcode list
-		unless (exists $id_lookup{$cellID}) {
-			print STDERR "$cellID is NOT in the list.\n";
-			$prev_cellID = $cellID;  # still update so we don't repeat
-			next;
-		}
-
-		# Close previous output
+		# 1. Close previous output
 		if (defined $OUT) {
 			close $OUT;
 			print STDERR "Closed output for $prev_cellID\n";
 		}
 
-		# Open new output
-		my $cell_bam = "$out_dir/${cellID}.bam";
-		open($OUT, "|-", "$samtools view -bS - > $cell_bam") or die "Can't open $cell_bam: $!";
-		print $OUT $header;
+		# 2. Skip if not in valid barcode list
+		unless (exists $id_lookup{$cellID}) {
+			print STDERR "$cellID is NOT in the list.\n";
+			$OUT = undef;
+			$prev_cellID = $cellID;
+			next;
+		}
 
+		# 3. Open new output
+		my $cell_bam = "$out_dir/${cellID}.bam";
+		open($OUT, "|-", "$samtools view -bS - > $cell_bam") 
+			or die "Can't open $cell_bam: $!";
+		print $OUT $header;
 		print STDERR "Opened output for $cellID\n";
+
 		$prev_cellID = $cellID;
 	}
 
-	# Write line if we’re writing to an output
-	if (defined $OUT) {
-		print $OUT "$line\n";
-	}
+	# Write line if we have a valid output
+	print $OUT "$line\n" if defined $OUT;
 }
 close $IN;
 if (defined $OUT) {
@@ -147,23 +147,23 @@ closedir($dh);
 # Process each BAM file
 #------------------------
 foreach my $bam_file (@bam_files) {
-    my ($cellID) = $bam_file =~ /^(.+)\.bam$/;
+	my ($cellID) = $bam_file =~ /^(.+)\.bam$/;
 
-    my $subfolder;
+	my $subfolder;
 
-    # Use hash bucket
-    my $hash = md5_hex($cellID);
-    my $bucket = hex(substr($hash, 0, 2)) % $n_buckets;
-    $subfolder = "$out_dir/bucket_$bucket";
-    
+	# Use hash bucket
+	my $hash = md5_hex($cellID);
+	my $bucket = hex(substr($hash, 0, 2)) % $n_buckets;
+	$subfolder = "$out_dir/bucket_$bucket";
+	
 
-    make_path($subfolder) unless -d $subfolder;
+	make_path($subfolder) unless -d $subfolder;
 
-    my $src = "$out_dir/$bam_file";
-    my $dst = "$subfolder/$bam_file";
+	my $src = "$out_dir/$bam_file";
+	my $dst = "$subfolder/$bam_file";
 
-    print "Moving $bam_file → $dst\n";
-    move($src, $dst) or warn "Failed to move $bam_file: $!";
+	print "Moving $bam_file → $dst\n";
+	move($src, $dst) or warn "Failed to move $bam_file: $!";
 }
 
 print STDERR "All done.\n";
