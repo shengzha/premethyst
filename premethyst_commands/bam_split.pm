@@ -73,6 +73,7 @@ my $header = `$samtools view -H $in_bam`;
 #-------------------------
 # Read BAM line by line
 #-------------------------
+print STDERR "$samtools view -@ $threads $in_bam 2>/dev/null";
 open(my $IN, "-|", "$samtools view -@ $threads $in_bam 2>/dev/null") or die "Can't read BAM: $!";
 
 my $prev_cellID = '';
