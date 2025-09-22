@@ -10,6 +10,7 @@ sub bam_bsc {
 
 # defaults
 $threads = 1;
+$min_q = 20;
 
 $die = "
 
@@ -22,6 +23,7 @@ Options
 -t   [INT]      Number of threads to use (def = $threads)
 -d   [DIR]      BSBolt DB directory
 -o   [DIR]      Output directory
+-q   [INT]      Minimum alignment quality  (def = $min_q)
 -C              NOT only output CpG sites in CGmap file (def = CpG only)
 
 
@@ -31,7 +33,7 @@ Executable Commands (from $DEFAULTS_FILE)
    
 ";
 
-unless (getopts("t:d:o:C", \%opt)) {
+unless (getopts("t:d:o:q:C", \%opt)) {
     die "Unknown option or missing argument.\n$die";
 }
 
@@ -40,9 +42,10 @@ if (!defined $ARGV[0]) {die "\nERROR: Specify bam directory as argument\n$die"};
 if (!defined $opt{'d'}) {die "\nERROR: Specify BSBolt DB directory as -d\n$die"};
 if (!defined $opt{'o'}) {die "\nERROR: Specify output directory as -o\n$die"};
 if (defined $opt{'t'}) {$threads = $opt{'t'}};
+if (defined $opt{'q'}) {$min_q = $opt{'q'}};
 
 
-$bsb_option = "$bsbolt CallMethylation -t $threads -min 1 -ignore-ov -verbose -DB $opt{'d'}";	
+$bsb_option = "$bsbolt CallMethylation -t $threads -min 1 -MQ $min_q -ignore-ov -verbose -DB $opt{'d'}";	
 unless (defined $opt{'C'}) {$bsb_option .= " -CG";}
 
 #-------------------------
