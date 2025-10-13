@@ -113,18 +113,16 @@ if (!defined $opt{'s'}) { # main thread
 	if (defined $opt{'E'}) {$thread_opts .= "-E "};
 	$thread_opts .= "-s";
 	
-	# open log file
-	open LOG, ">$opt{'O'}.extract.log";
 	$ts = localtime(time);
-	print LOG "$ts\tProgram called.\n\n============== Phase 1: Parsing bam and processing per-cell calls ==============\n\n";
+	print STDERR "$ts\tProgram called.\n\n============== Phase 1: Parsing bam and processing per-cell calls ==============\n\n";
 
 	# setup output directory
 	system("mkdir $opt{'O'}");
 	$ts = localtime(time);
-	print LOG "$ts\tOutput directory created: $opt{'O'}\n";
+	print STDERR "$ts\tOutput directory created: $opt{'O'}\n";
 	
 	if (defined $opt{'E'}) {
-		print LOG "$ts\tInitializing h5 export streaming (option -E)\n";
+		print STDERR "$ts\tInitializing h5 export streaming (option -E)\n";
 		system("mkdir $opt{'O'}.export");
 		if (defined $opt{'H'}) {
 			system("$premethyst stream-h5 $opt{'O'}.export $opt{'O'} CH &");
@@ -134,7 +132,7 @@ if (!defined $opt{'s'}) { # main thread
 	}
 	
 	if (defined $opt{'x'}) {
-		print LOG "$ts\tWARNING: -x toggled, will NOT output cov files, only stats files.\n";
+		print STDERR "$ts\tWARNING: -x toggled, will NOT output cov files, only stats files.\n";
 	}
 	
 	# setup threading stuff
@@ -142,7 +140,7 @@ if (!defined $opt{'s'}) { # main thread
 	
 	# start parsing bam
 	$ts = localtime(time);
-	print LOG "$ts\tParsing bam file: $ARGV[0]\n";
+	print STDERR "$ts\tParsing bam file: $ARGV[0]\n";
 	
 	open IN, "$samtools view -@ $in_threads $ARGV[0] |";
 	$currentBarc = "null";
@@ -218,7 +216,7 @@ if (!defined $opt{'s'}) { # main thread
 		}
 	}
 	$ts = localtime(time);
-	print LOG "$ts\tAll threads complete! Collating CellInfo.\n";
+	print STDERR "$ts\tAll threads complete! Collating CellInfo.\n";
 
 	foreach $barc (keys %ALL_CELLS) {
 		if (defined $opt{'x'}) {
@@ -391,7 +389,7 @@ sub check_threads {
 			if (-e "$opt{'O'}/$queued_barc.complete") { # finished
 				$running--;
 				$QUEUE{$queued_barc} = 2;
-				print LOG "\t\t\t$queued_barc COMPLETED!\n";
+				print STDERR "\t\t\t$queued_barc COMPLETED!\n";
 			}
 		} elsif ($QUEUE{$queued_barc} == 0) { # store to kick off
 			push @WAITING, $queued_barc;
@@ -399,12 +397,12 @@ sub check_threads {
 	}
 	if ($running < $opt{'t'}) { # if not at full threading
 		$ts = localtime(time);
-#		print LOG "\t$ts\tThreads active: $running, adding...\n";
+#		print STDERR "\t$ts\tThreads active: $running, adding...\n";
 		for ($waitingID = 0; $waitingID < ($opt{'t'} - $running); $waitingID++) { # see how many short
 			if (defined $QUEUE{$WAITING[$waitingID]}) { # if wiating is occupied
 				system("$premethyst bam-extract $thread_opts $opt{'O'} $WAITING[$waitingID] &"); # start the thread
 				$QUEUE{$WAITING[$waitingID]} = 1; # log it as active
-				print LOG "\t\t$WAITING[$waitingID] now running.\n";
+				print STDERR "\t\t$WAITING[$waitingID] now running.\n";
 			}
 		}
 	}
