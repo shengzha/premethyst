@@ -7,7 +7,7 @@ use Exporter "import";
 
 sub bam_extract {
 
-getopts("O:t:sm:G:C:N:P:p:T:xs:L:M:BEH", \%opt);
+getopts("O:t:sm:G:C:N:P:p:T:xs:L:M:BEHq:", \%opt);
 
 # dfaults
 $minSize = 10000000;
@@ -41,6 +41,7 @@ Options:
                   Eg. Bismark or UA-Meth as aligner.
                   Default assumes BSBolt (XB:Z:)
    -H           Exclude CH context
+   -q   [INT]   Min read alignment quality
 
 Threading:
    -t   [INT]   Max number of concurrent extract threads (def = 1)
@@ -142,7 +143,9 @@ if (!defined $opt{'s'}) { # main thread
 	$ts = localtime(time);
 	print STDERR "$ts\tParsing bam file: $ARGV[0]\n";
 	
-	open IN, "$samtools view -@ $in_threads $ARGV[0] |";
+	$view_cmd = "$samtools view -@ $in_threads";
+	$view_cmd .= " -q $opt{'q'}" if defined $opt{'q'};
+	open IN, "$view_cmd $ARGV[0] |";
 	$currentBarc = "null";
 	$methCol = 0;
 
