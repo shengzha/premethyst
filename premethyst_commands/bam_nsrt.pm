@@ -45,17 +45,18 @@ if (defined $opt{'t'}) {$sort_threads = $opt{'t'}};
 if (defined $opt{'m'}) {$sort_mem = $opt{'m'}};
 
 
-$sort_options = "$samtools sort -n -o $opt{'O'}.nsrt.bam -@ $sort_threads -m $sort_mem";
+$sort_options = "$samtools sort -n -@ $sort_threads -m $sort_mem";
 if (defined $opt{'T'}) {
 	$sort_options .= " -T $opt{'T'}";
 }
 
 if (@ARGV > 1) { # multiple bam files 
-	$sort_call = "$samtools cat @ARGV | $sort_options";
+	$sort_call = "$samtools cat @ARGV | $sort_options ";
 } else {
-	$sort_call = "$sort_options $ARGV[0]";
+	$sort_call = "$sort_options $ARGV[0] ";
 }
 
+$sort_call .= "| $samtools fixmate -p -m - $opt{'O'}.nsrt.bam";
 
 print STDERR "Command: $sort_call\n";
 system("$sort_call");
