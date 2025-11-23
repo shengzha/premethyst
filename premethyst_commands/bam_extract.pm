@@ -9,8 +9,8 @@ sub bam_extract {
 
 getopts("O:t:sm:G:C:N:P:p:T:xs:L:M:BEHq:", \%opt);
 
-# dfaults
-$minSize = 10000000;
+# defaults
+# $minSize = 10000000; # not implemented
 $minReads = 10000;
 $maxPct = 100;
 $minPct = 0;
@@ -34,7 +34,7 @@ barcodes; however -C/-N is much simpler.
 Options:
    -O   [STR]   Out prefix
    -m   [INT]   Minimum chromosome size to retain (def = $minSize)
-                  Used to exclude random and other small contigs
+                  Used to exclude random and other small contigs (NOT implemented)
    -M   [FLT]   Max allowed fraction mCH sites methylated (def = $read_mCHmax)
                   For brain, rec: 0.4; for non mCH cell types, rec: 0.1
    -B           Methylation call field is in Bismark format (XM:Z:)
@@ -112,13 +112,14 @@ if (!defined $opt{'s'}) { # main thread
 	if (defined $opt{'B'}) {$thread_opts .= "-B "};
 	if (defined $opt{'H'}) {$thread_opts .= "-H "};
 	if (defined $opt{'E'}) {$thread_opts .= "-E "};
+	if (defined $opt{'M'}) {$thread_opts .= "-M $read_mCHmax "};
 	$thread_opts .= "-s";
 	
 	$ts = localtime(time);
 	print STDERR "$ts\tProgram called.\n\n============== Phase 1: Parsing bam and processing per-cell calls ==============\n\n";
 
 	# setup output directory
-	system("mkdir $opt{'O'}");
+	system("mkdir $opt{'O'}") unless -d $opt{'O'};
 	$ts = localtime(time);
 	print STDERR "$ts\tOutput directory created: $opt{'O'}\n";
 	
@@ -268,9 +269,9 @@ if (!defined $opt{'s'}) { # main thread
 						if (defined $read_meth{$coord}{'h'}) {$COORD_meth{$coord}{'h'}++};
 					}
 				}
+			} else {
+				$excluded_mCH++;
 			}
-		} else {
-			$excluded_mCH++;
 		}
 		
 	} close IN;
